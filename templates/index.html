@@ -1,0 +1,421 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学英语作文批改 - 数字人助手</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-icon">📝</span>
+                <span class="logo-text">中学英语作文批改</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">首页</a></li>
+                <li><a href="#correct" class="nav-link">作文批改</a></li>
+                <li><a href="#knowledge" class="nav-link">知识图谱</a></li>
+                <li><a href="#progress" class="nav-link">进步追踪</a></li>
+                <li><a href="#topics" class="nav-link">话题推荐</a></li>
+                <li><a href="#qa" class="nav-link">问答助手</a></li>
+            </ul>
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 数字人区域 -->
+        <aside class="digital-human-panel">
+            <div class="human-container">
+                <div class="human-avatar" id="humanAvatar">
+                    <img src="{{ url_for('static', filename='images/human character.png') }}" 
+                         alt="数字人" class="human-static" id="humanStatic">
+                    <img src="{{ url_for('static', filename='images/human speaking.gif') }}" 
+                         alt="数字人说话中" class="human-speaking" id="humanSpeaking">
+                </div>
+                <div class="human-name">小梦</div>
+                <div class="human-status" id="humanStatus">您好，我是小梦，您的英语作文助手</div>
+            </div>
+            
+            <!-- 快捷问答区域 -->
+            <div class="quick-qa">
+                <h3>快捷问题</h3>
+                <div class="quick-questions">
+                    <button class="quick-btn" data-question="如何提高英语写作水平？">如何提高写作水平？</button>
+                    <button class="quick-btn" data-question="英语作文常用连接词有哪些？">常用连接词</button>
+                    <button class="quick-btn" data-question="如何写好英语开头和结尾？">开头结尾技巧</button>
+                </div>
+            </div>
+
+            <!-- 语法错误统计 -->
+            <div class="grammar-stats-panel" id="grammarStatsPanel">
+                <h3>我的薄弱点</h3>
+                <div class="grammar-stats-list" id="grammarStatsList">
+                    <div class="empty-hint">暂无数据，开始写作后会自动统计</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右侧内容区域 -->
+        <section class="content-area">
+            <!-- 首页区域 -->
+            <div class="section" id="home">
+                <div class="welcome-banner">
+                    <h1>欢迎使用中学英语作文批改系统</h1>
+                    <p>上传您的英语作文，获取专业、智能的批改建议</p>
+                    <button class="primary-btn" onclick="scrollToSection('correct')">开始批改</button>
+                </div>
+            </div>
+
+            <!-- 作文批改区域 -->
+            <div class="section" id="correct">
+                <h2 class="section-title">✍️ 智能作文批改</h2>
+                <div class="essay-form">
+                    <div class="form-group">
+                        <label for="essayTopic">作文话题</label>
+                        <input type="text" id="essayTopic" placeholder="请输入作文话题（如：环境保护）">
+                    </div>
+                    <div class="form-group">
+                        <label for="essayTitle">作文标题</label>
+                        <input type="text" id="essayTitle" placeholder="请输入作文标题（选填）">
+                    </div>
+                    <div class="form-group">
+                        <label for="essayContent">作文内容</label>
+                        <div class="textarea-wrapper">
+                            <textarea id="essayContent" rows="12" 
+                                      placeholder="请在此输入您的英语作文内容..."></textarea>
+                            <div class="grammar-hints" id="grammarHints"></div>
+                        </div>
+                        <div class="input-tools">
+                            <span class="word-count">字数: <span id="wordCount">0</span></span>
+                            <button class="tool-btn" onclick="loadLastVersion()">📋 加载上版本</button>
+                            <button class="tool-btn" onclick="showVersions()">📚 版本历史</button>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button class="primary-btn" id="submitBtn" onclick="submitEssay()">
+                            <span class="btn-text">提交批改</span>
+                            <span class="btn-loading" style="display:none;">批改中...</span>
+                        </button>
+                        <button class="secondary-btn" onclick="clearEssay()">清空内容</button>
+                    </div>
+                </div>
+                
+                <!-- 批改结果展示 -->
+                <div class="correction-result" id="correctionResult" style="display:none;">
+                    <h3>📋 批改结果</h3>
+                    
+                    <!-- 四维评分展示 -->
+                    <div class="four-dimension-scores" id="fourDimensionScores">
+                        <h4>多维评分</h4>
+                        <div class="dimension-grid">
+                            <!-- 语言基础 -->
+                            <div class="dimension-card">
+                                <div class="dimension-header">
+                                    <span class="dimension-name">语言基础</span>
+                                    <span class="dimension-total" id="langBaseTotal">0/35</span>
+                                </div>
+                                <div class="dimension-items">
+                                    <div class="dimension-item">
+                                        <span class="item-name">语法准确</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="grammarBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="grammarScore">0/17.5</span>
+                                    </div>
+                                    <div class="dimension-item">
+                                        <span class="item-name">词汇运用</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="vocabBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="vocabScore">0/17.5</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 内容思想 -->
+                            <div class="dimension-card">
+                                <div class="dimension-header">
+                                    <span class="dimension-name">内容思想</span>
+                                    <span class="dimension-total" id="contentTotal">0/35</span>
+                                </div>
+                                <div class="dimension-items">
+                                    <div class="dimension-item">
+                                        <span class="item-name">内容完整</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="completeBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="completeScore">0/12</span>
+                                    </div>
+                                    <div class="dimension-item">
+                                        <span class="item-name">逻辑连贯</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="logicBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="logicScore">0/12</span>
+                                    </div>
+                                    <div class="dimension-item">
+                                        <span class="item-name">思想深度</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="depthBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="depthScore">0/11</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 结构形式 -->
+                            <div class="dimension-card">
+                                <div class="dimension-header">
+                                    <span class="dimension-name">结构形式</span>
+                                    <span class="dimension-total" id="structureTotal">0/20</span>
+                                </div>
+                                <div class="dimension-items">
+                                    <div class="dimension-item">
+                                        <span class="item-name">篇章结构</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="orgBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="orgScore">0/10</span>
+                                    </div>
+                                    <div class="dimension-item">
+                                        <span class="item-name">衔接手段</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="transBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="transScore">0/10</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 写作规范 -->
+                            <div class="dimension-card">
+                                <div class="dimension-header">
+                                    <span class="dimension-name">写作规范</span>
+                                    <span class="dimension-total" id="normTotal">0/10</span>
+                                </div>
+                                <div class="dimension-items">
+                                    <div class="dimension-item">
+                                        <span class="item-name">文体格式规范</span>
+                                        <div class="item-bar">
+                                            <div class="item-fill" id="formatBar" style="width:0%"></div>
+                                        </div>
+                                        <span class="item-score" id="formatScore">0/10</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 总分展示 -->
+                        <div class="final-score-box">
+                            <div class="final-score-label">最终得分</div>
+                            <div class="final-score-value" id="finalScore">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 错误标注 -->
+                    <div class="error-section">
+                        <h4>错误标注与纠正</h4>
+                        <div class="error-list" id="errorList">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 总体评价 -->
+                    <div class="summary-section">
+                        <h4>总体评价与建议</h4>
+                        <div class="summary-content" id="summaryContent">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+
+                    <!-- 版本操作 -->
+                    <div class="version-actions">
+                        <button class="secondary-btn" onclick="showVersions()">📚 查看版本历史</button>
+                        <button class="secondary-btn" onclick="showProgress()">📈 查看进步曲线</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 知识图谱区域 -->
+            <div class="section" id="knowledge">
+                <div class="knowledge-header">
+                    <h2 class="section-title">🌐 英语作文知识图谱</h2>
+                    <div class="graph-legend">
+                        <span class="legend-item"><span class="legend-color center"></span>核心</span>
+                        <span class="legend-item"><span class="legend-color narrative"></span>记叙文</span>
+                        <span class="legend-item"><span class="legend-color argumentative"></span>议论文</span>
+                        <span class="legend-item"><span class="legend-color expository"></span>说明文</span>
+                        <span class="legend-item"><span class="legend-color practical"></span>应用文</span>
+                    </div>
+                </div>
+                <div class="knowledge-graph-container">
+                    <svg id="knowledgeGraphSvg" viewBox="0 0 1000 700">
+                        <!-- 动态生成 -->
+                    </svg>
+                    <div class="graph-tooltip" id="graphTooltip"></div>
+                    <div class="graph-hint">💡 点击三级节点（常见表达/通用格式/话题推荐）展开/收起详情</div>
+                </div>
+                <div class="knowledge-details" id="knowledgeDetails">
+                    <div class="empty-hint">点击图谱节点查看详情</div>
+                </div>
+            </div>
+
+            <!-- 进步追踪区域 -->
+            <div class="section" id="progress">
+                <h2 class="section-title">📈 进步追踪</h2>
+                <div class="progress-controls">
+                    <select id="progressTopicSelect" onchange="loadProgressChart()">
+                        <option value="">全部话题</option>
+                    </select>
+                    <select id="progressDimensionSelect" onchange="loadProgressChart()">
+                        <option value="total">总分</option>
+                        <option value="language_base">语言基础</option>
+                        <option value="content_idea">内容思想</option>
+                        <option value="structure">结构形式</option>
+                        <option value="writing_norm">写作规范</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+                <div class="progress-stats" id="progressStats">
+                    <div class="stat-item">
+                        <span class="stat-label">写作次数</span>
+                        <span class="stat-value" id="statCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">最高得分</span>
+                        <span class="stat-value" id="statMax">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均得分</span>
+                        <span class="stat-value" id="statAvg">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">进步幅度</span>
+                        <span class="stat-value" id="statImprove">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 话题推荐区域 -->
+            <div class="section" id="topics">
+                <div class="topics-header">
+                    <h2 class="section-title">📚 作文话题推荐</h2>
+                    <button class="refresh-btn" onclick="refreshTopics()" title="刷新话题">
+                        <span class="refresh-icon">🔄</span>
+                        <span>换一批</span>
+                    </button>
+                </div>
+                <div class="topics-grid" id="topicsGrid">
+                    <!-- 话题内容由JS动态生成 -->
+                </div>
+            </div>
+
+            <!-- 问答助手区域 -->
+            <div class="section" id="qa">
+                <h2 class="section-title">💬 小梦英语问答助手</h2>
+                <div class="qa-container">
+                    <div class="qa-history" id="qaHistory">
+                        <div class="qa-welcome">
+                            <div class="qa-avatar">🤖</div>
+                            <div class="qa-welcome-text">
+                                <p>你好！我是小梦，专注于帮助中学生提升英语写作能力。</p>
+                                <p>你可以问我：</p>
+                                <ul>
+                                    <li>如何提高英语写作水平？</li>
+                                    <li>英语作文的结构和技巧</li>
+                                    <li>特定话题的表达方式</li>
+                                    <li>语法错误纠正</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="qa-input-area">
+                        <input type="text" id="qaInput" placeholder="输入您的英语写作问题，小梦会为您解答..." 
+                               onkeypress="handleQAKeypress(event)">
+                        <button class="send-btn" onclick="sendQuestion()">发送</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 版本历史模态框 -->
+    <div class="modal" id="versionModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 版本历史</h3>
+                <button class="close-btn" onclick="closeModal('versionModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="version-list" id="versionList">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 版本对比模态框 -->
+    <div class="modal" id="compareModal" style="display:none;">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3>🔍 版本对比</h3>
+                <button class="close-btn" onclick="closeModal('compareModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="compare-container" id="compareContainer">
+                    <div class="compare-panel">
+                        <div class="compare-header">
+                            <span class="compare-version">版本 <span id="compareV1">-</span></span>
+                            <span class="compare-score">得分: <span id="compareS1">-</span></span>
+                        </div>
+                        <div class="compare-content" id="compareContent1"></div>
+                    </div>
+                    <div class="compare-panel">
+                        <div class="compare-header">
+                            <span class="compare-version">版本 <span id="compareV2">-</span></span>
+                            <span class="compare-score">得分: <span id="compareS2">-</span></span>
+                        </div>
+                        <div class="compare-content" id="compareContent2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 语法推送模态框 -->
+    <div class="modal" id="grammarPushModal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📚 语法强化训练</h3>
+                <button class="close-btn" onclick="closeModal('grammarPushModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="grammar-lesson" id="grammarLesson">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>&copy; 2026 中学英语作文批改系统 | 基于讯飞星火大模型</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/topics-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
