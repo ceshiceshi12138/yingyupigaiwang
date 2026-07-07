@@ -1,5 +1,4 @@
 flask==2.3.3
 websocket-client==1.6.1
 python-dateutil==2.8.2
-graphify==1.0.0
 gunicorn==21.2.0
